@@ -5,39 +5,46 @@ import { TextCard } from "../components/TextCard";
 import { Button } from "../components/Button";
 import { MoneyMovimentCard } from "../components/MoneyMovimentCard";
 import { useRouter } from "expo-router";
-
-const gastos = [
-  {
-    title: "Sushi",
-    description: "Comprei um sushi do takay",
-    value: -72.5,
-    when: new Date(),
-  },
-  {
-    title: "Salário",
-    description: "Recebi meu salário",
-    value: 3000,
-    when: new Date(),
-  },
-];
+import { useQuery } from "react-query";
+import {
+  getAllMoviments,
+  getAmount,
+  getTodayAmount,
+} from "../services/moviments";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function Home() {
   const router = useRouter();
 
+  const { data: moviments = [] } = useQuery(["moviments"], () =>
+    getAllMoviments()
+  );
+
+  const { data: todayAmount = 0 } = useQuery(["today-amount"], () =>
+    getTodayAmount()
+  );
+
+  const { data: amount } = useQuery(["amount"], () => getAmount());
+  const amountString = amount
+    ? amount.toFixed(2).toString().replace(".", ",")
+    : "0,00";
+
   return (
     <View className="bg-zinc-950 h-full">
       <ScrollView
+        showsVerticalScrollIndicator={false}
         className="flex-1"
-        contentContainerStyle={{ padding: 0, flex: 1 }}
+        contentContainerStyle={{ padding: 0 }}
       >
         <View className="bg-zinc-950 h-80 justify-center items-center">
           <View className="flex flex-row">
-            <Text className="text-white text-4xl font-semibold">R$10.553</Text>
-            <Text className="text-zinc-700 text-4xl font-semibold">,00</Text>
+            <Text className="text-white text-4xl font-semibold">
+              R${amountString}
+            </Text>
           </View>
 
           <View style={{ gap: 15 }} className="flex flex-row mt-3">
-            <CreditValue value={-150.98} />
+            <CreditValue value={todayAmount} />
             <TextCard text="Hoje" />
           </View>
 
@@ -73,7 +80,7 @@ export default function Home() {
           className="bg-slate-100 flex-1 rounded-3xl p-5"
           style={{ gap: 20 }}
         >
-          {gastos.map((gasto, index) => (
+          {moviments.map((gasto, index) => (
             <MoneyMovimentCard
               key={index}
               title={gasto.title}
@@ -82,6 +89,15 @@ export default function Home() {
               when={gasto.when}
             />
           ))}
+
+          {!moviments.length && (
+            <View className="h-full items-center justify-center">
+              <FontAwesome size={40} name={"dollar"} color={"#94a3b8"} />
+              <Text className="text-lg text-slate-400 text-center mt-3">
+                Você ainda não tem nenhum movimento cadastrado
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

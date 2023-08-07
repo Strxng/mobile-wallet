@@ -3,7 +3,10 @@ import { View } from "react-native";
 import { useForm } from "react-hook-form";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMutation, useQueryClient } from "react-query";
+import { addMoviment } from "../services/moviments";
+import { notifyError } from "../utils/toast";
 
 interface FormProps {
   title: string;
@@ -13,8 +16,26 @@ interface FormProps {
 
 export default function ModalDeposit() {
   const { operation } = useLocalSearchParams();
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
-  const { control, handleSubmit } = useForm<FormProps>({
+  const { mutate } = useMutation(addMoviment, {
+    onSuccess: async () => {
+      queryClient.invalidateQueries({
+        queryKey: "amount",
+      });
+      queryClient.invalidateQueries({
+        queryKey: "today-amount",
+      });
+      queryClient.invalidateQueries({
+        queryKey: "moviments",
+      });
+
+      router.back();
+    },
+  });
+
+  const { control, handleSubmit, setError } = useForm<FormProps>({
     defaultValues: {
       title: "",
       description: "",
@@ -23,13 +44,42 @@ export default function ModalDeposit() {
   });
 
   const onSubmit = (data: FormProps) => {
-    if (operation === "add") {
-      // guardar dinheiro
-    } else {
-      // remover dinheiro
+    const regex = /^[0-9]+,[0-9]+$/;
+    const isValid = regex.test(data.value);
+
+    if (!isValid) {
+      setError("value", {
+        message: "Use vírgula para separar os valores decimais",
+      });
+      return;
     }
 
-    console.log({ data, operation });
+    const amount = Number(data.value.replace(",", "."));
+
+    if (amount < 0) {
+      setError("value", {
+        message: "O valor deve ser positivo",
+      });
+    }
+
+    if (operation === "add") {
+      mutate({
+        ...data,
+        value: amount,
+        when: new Date(),
+      });
+    } else if (operation === "remove") {
+      mutate({
+        ...data,
+        value: amount * -1,
+        when: new Date(),
+      });
+    } else {
+      notifyError(
+        "Operação inválida",
+        "A operação que você tentou realizar é inválida"
+      );
+    }
   };
 
   return (
@@ -49,7 +99,7 @@ export default function ModalDeposit() {
       <Input
         name="value"
         control={control}
-        placeholder="Valor"
+        placeholder="Valor (use ',' para separar os valores decimais)"
         keyboardType="decimal-pad"
         required
       />

@@ -35,7 +35,11 @@ export const Input = ({
         keyboardType={keyboardType}
       />
 
-      {fieldState.error && <Text>Erro</Text>}
+      {fieldState.error && (
+        <Text className="text-start w-full text-red-600">
+          {fieldState.error.message}
+        </Text>
+      )}
     </>
   );
 };
