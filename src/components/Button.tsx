@@ -21,12 +21,15 @@ export const Button = ({
 
   return (
     <TouchableOpacity
+      testID="button"
       className="p-3 h-14 justify-center items-center rounded-2xl flex flex-row"
       style={{ backgroundColor: color, gap: 10, width }}
       onPress={onPress}
     >
       {iconName && <FontAwesome size={20} name={iconName} color={"#FFF"} />}
-      <Text className="text-white text-lg font-semibold">{title}</Text>
+      <Text testID="button-text" className="text-white text-lg font-semibold">
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };
