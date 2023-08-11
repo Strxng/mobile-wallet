@@ -17,16 +17,24 @@ export const CreditValue = ({ value }: CreditValueProps) => {
   const valueString = normalizedValue.toString().replace(".", ",");
 
   return (
-    <View className="flex flex-row justify-center items-center">
+    <View
+      testID="credit-value"
+      className="flex flex-row justify-center items-center"
+    >
       <View
+        testID="credit-value-icon-container"
         style={{ backgroundColor: color }}
-        className="rounded-full h-5 w-5 bg-slate-200 justify-center items-center"
+        className="rounded-full h-5 w-5 justify-center items-center"
       >
         <FontAwesome size={12} name={iconName} color={"#FFF"} />
       </View>
 
-      <Text style={{ color: color }} className="text-lg ml-1 font-semibold">
-        R${valueString}
+      <Text
+        testID="credit-value-text"
+        style={{ color: color }}
+        className="text-lg ml-1 font-semibold"
+      >
+        {`R$${valueString}`}
       </Text>
     </View>
   );
