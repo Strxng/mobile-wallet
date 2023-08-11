@@ -5,16 +5,20 @@ import { TextCard } from "../components/TextCard";
 import { Button } from "../components/Button";
 import { MoneyMovimentCard } from "../components/MoneyMovimentCard";
 import { useRouter } from "expo-router";
-import { useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
+
 import {
+  deleteMoviment,
   getAllMoviments,
   getAmount,
   getTodayAmount,
 } from "../services/moviments";
+
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function Home() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data: moviments = [] } = useQuery(["moviments"], () =>
     getAllMoviments()
@@ -29,12 +33,26 @@ export default function Home() {
     ? amount.toFixed(2).toString().replace(".", ",")
     : "0,00";
 
+  const { mutate } = useMutation(deleteMoviment, {
+    onSuccess: async () => {
+      queryClient.invalidateQueries({
+        queryKey: "amount",
+      });
+      queryClient.invalidateQueries({
+        queryKey: "today-amount",
+      });
+      queryClient.invalidateQueries({
+        queryKey: "moviments",
+      });
+    },
+  });
+
   return (
     <View className="bg-zinc-950 h-full">
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
-        contentContainerStyle={{ padding: 0 }}
+        contentContainerStyle={{ padding: 0, minHeight: "65%" }}
       >
         <View className="bg-zinc-950 h-80 justify-center items-center">
           <View className="flex flex-row">
@@ -77,7 +95,7 @@ export default function Home() {
         </View>
 
         <View
-          className="bg-slate-100 flex-1 rounded-3xl p-5"
+          className="bg-slate-100 min-h-full flex-1 rounded-3xl p-5"
           style={{ gap: 20 }}
         >
           {moviments.map((gasto, index) => (
@@ -87,6 +105,7 @@ export default function Home() {
               description={gasto.description}
               value={gasto.value}
               when={gasto.when}
+              onDeletePress={() => mutate(gasto.id!)}
             />
           ))}
 
@@ -94,7 +113,7 @@ export default function Home() {
             <View className="h-full items-center justify-center">
               <FontAwesome size={40} name={"dollar"} color={"#94a3b8"} />
               <Text className="text-lg text-slate-400 text-center mt-3">
-                Você ainda não tem nenhum movimento cadastrado
+                Você não tem nenhum movimento cadastrado
               </Text>
             </View>
           )}

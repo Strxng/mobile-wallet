@@ -24,6 +24,16 @@ export const addMoviment = async (moviment: Moviment): Promise<Moviment> => {
   }
 };
 
+export const deleteMoviment = async (movimentId: string): Promise<void> => {
+  const moviments = await getObject<Moviment[]>("MOVIMENTS");
+  if (!moviments) {
+    throw new Error("Falha ao deletar o movimento");
+  }
+
+  const newMoviments = moviments.filter((mov) => mov.id !== movimentId);
+  await storeObject("MOVIMENTS", newMoviments);
+};
+
 export const getAllMoviments = async (): Promise<Moviment[]> => {
   const moviments = (await getObject<Moviment[]>("MOVIMENTS")) || [];
   const orderedMoviments = moviments?.sort((a, b) => {
